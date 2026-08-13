@@ -1,0 +1,8 @@
+name: distributed
+author: ""
+clients:
+  node:
+    runtime: node
+  web:
+    runtime: browser
+    default: true

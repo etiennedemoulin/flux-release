@@ -112,6 +112,9 @@ class MainDiv extends LitElement {
 
   process(currentTime, audioTime, event) {
 
+    // @note for later 
+    // this could be an option to refactor without using forever because we are aware of event duration.
+
     if (event instanceof TransportEvent) {
 
       // update view on transport event
@@ -173,14 +176,23 @@ class MainDiv extends LitElement {
       const attackTime = getRandomNumber(this.params.centerAttack, this.params.widthAttack);
       currentEnveloppe.attack = attackTime;
 
+      // parse for old syntax
+      if (!currentEnveloppe.enveloppeDuration) {
+        currentEnveloppe.enveloppeDuration = 60;
+      }
+
+      if (!currentEnveloppe.decayVolume) {
+        currentEnveloppe.decayVolume = 0;
+      }
+
       // compute nextEventTime
       // trigger new attack at time
       const interDur = getRandomNumber(this.params.centerInterDur, this.params.widthInterDur);
       const nextEvent = this.audioContext.currentTime + releaseTime + interDur;
-      const nextEventDuration = nextCorpus - releaseTime - interDur;
+      const nextEventDuration = nextCorpus - releaseTime - interDur - attackTime;
       this.engines[i].silence = interDur;
-      this.engines[i].forever(currentEnveloppe, nextEvent, nextEventDuration); 
 
+      this.engines[i].forever(currentEnveloppe, nextEvent, nextEventDuration); 
     }
 
     return this.params.nextCorpusTime;

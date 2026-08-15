@@ -27,11 +27,84 @@ export class Engine {
 
     this.currentEnveloppe = null;
     this.silence = 0;
+    this.endTime = 0;
+    this.release = 0;
 
   }
 
   start(enveloppe, time, duration) {
 
+    this.currentEnveloppe = enveloppe;
+
+    const triggerTime = time + 0.05;
+    const halfAttackTime = triggerTime + enveloppe.attack / 2;
+    const attackTime = triggerTime + enveloppe.attack;
+
+    const statTime1 = attackTime + (enveloppe.stationary1 / enveloppe.enveloppeDuration * duration);
+    const decayTime = statTime1 + ((enveloppe.decay / 2) / enveloppe.enveloppeDuration * duration);
+    const statTime2 = decayTime + (enveloppe.stationary2 / enveloppe.enveloppeDuration * duration);
+    const sustainTime = statTime2 + ((enveloppe.decay / 2) / enveloppe.enveloppeDuration * duration);
+
+    const releaseTime = attackTime + duration;
+    const halfReleaseTime = releaseTime + enveloppe.release * 2/3;
+    const endTime = releaseTime + enveloppe.release;
+    this.endTime = endTime;
+
+    const volume = enveloppe.volume / 400;
+    const volume2 = enveloppe.volume2 / 400;
+    const decayVolume = (enveloppe.volume + enveloppe.decayVolume) / 400;
+
+    // enveloppe volume
+    this.env.gain.setValueAtTime(0.0, triggerTime);
+
+    // attack 
+    this.env.gain.linearRampToValueAtTime(volume * (Math.pow(0.5, 0.25)), halfAttackTime);
+    this.env.gain.linearRampToValueAtTime(volume, attackTime);
+
+    // stationnaire
+    if (statTime1 < releaseTime) {
+      this.env.gain.setValueAtTime(volume, statTime1);
+    }
+
+    if (decayTime < releaseTime) {
+      this.env.gain.linearRampToValueAtTime(decayVolume, decayTime);
+    }
+
+    if (statTime2 < releaseTime) {
+      this.env.gain.setValueAtTime(decayVolume, statTime2);
+    } 
+
+    if (sustainTime < releaseTime) {
+      this.env.gain.linearRampToValueAtTime(volume, sustainTime);
+      this.env.gain.setValueAtTime(volume, releaseTime);
+      this.env.gain.linearRampToValueAtTime(volume * (Math.pow(0.33, 0.25)), halfReleaseTime);
+    } else {
+      this.env.gain.setValueAtTime(decayVolume, releaseTime);
+      this.env.gain.linearRampToValueAtTime(decayVolume * (Math.pow(0.33, 0.25)), halfReleaseTime);
+    }
+
+    // release
+    this.env.gain.linearRampToValueAtTime(0, endTime);
+
+    // enveloppe frequency
+    this.osc.frequency.setValueAtTime(enveloppe.startFreq, triggerTime);
+    this.osc.frequency.setValueAtTime(enveloppe.startFreq, attackTime);
+    this.osc.frequency.linearRampToValueAtTime(enveloppe.endFreq, releaseTime);
+
+    // visuel enveloppe
+    this.env2.gain.setValueAtTime(0, triggerTime);
+    this.env2.gain.linearRampToValueAtTime(volume2, attackTime);
+    this.env2.gain.setValueAtTime(volume2, releaseTime);
+    this.env2.gain.linearRampToValueAtTime(0, endTime);
+
+    // visuel frequency
+    this.osc2.frequency.setValueAtTime(enveloppe.freq2, triggerTime);
+
+  }
+
+
+  forever(enveloppe, time, duration) {
+    // same as start without release 
     this.currentEnveloppe = enveloppe;
 
     const triggerTime = time + 0.05;
@@ -73,15 +146,15 @@ export class Engine {
 
     if (sustainTime < releaseTime) {
       this.env.gain.linearRampToValueAtTime(volume, sustainTime);
-      this.env.gain.setValueAtTime(volume, releaseTime);
-      this.env.gain.linearRampToValueAtTime(volume * (Math.pow(0.66, 0.25)), halfReleaseTime);
+      // this.env.gain.setValueAtTime(volume, releaseTime);
+      // this.env.gain.linearRampToValueAtTime(volume * (Math.pow(0.33, 0.25)), halfReleaseTime);
     } else {
-      this.env.gain.setValueAtTime(decayVolume, releaseTime);
-      this.env.gain.linearRampToValueAtTime(decayVolume * (Math.pow(0.66, 0.25)), halfReleaseTime);
+      // this.env.gain.setValueAtTime(decayVolume, releaseTime);
+      // this.env.gain.linearRampToValueAtTime(decayVolume * (Math.pow(0.33, 0.25)), halfReleaseTime);
     }
 
     // release
-    this.env.gain.linearRampToValueAtTime(0, endTime);
+    // this.env.gain.linearRampToValueAtTime(0, endTime);
 
     // enveloppe frequency
     this.osc.frequency.setValueAtTime(enveloppe.startFreq, triggerTime);
@@ -91,8 +164,8 @@ export class Engine {
     // visuel enveloppe
     this.env2.gain.setValueAtTime(0, triggerTime);
     this.env2.gain.linearRampToValueAtTime(volume2, attackTime);
-    this.env2.gain.setValueAtTime(volume2, releaseTime);
-    this.env2.gain.linearRampToValueAtTime(0, endTime);
+    // this.env2.gain.setValueAtTime(volume2, releaseTime);
+    // this.env2.gain.linearRampToValueAtTime(0, endTime);
 
     // visuel frequency
     this.osc2.frequency.setValueAtTime(enveloppe.freq2, triggerTime);
@@ -117,6 +190,29 @@ export class Engine {
 
   }
 
+
+  triggerRelease(time, release) {
+    this.release = release;
+
+    const sustainVolume = this.env.gain.value;
+
+    this.env.gain.cancelScheduledValues(time);
+    this.env.gain.linearRampToValueAtTime(sustainVolume, time + 0.01);
+
+    this.env.gain.linearRampToValueAtTime(sustainVolume * (Math.pow(0.66, 0.25)), time + (release * 0.66));
+    this.env.gain.linearRampToValueAtTime(0, time + release);
+
+    this.osc.frequency.cancelScheduledValues(time);
+    this.osc2.frequency.cancelScheduledValues(time);
+    this.osc.frequency.linearRampToValueAtTime(this.osc.frequency.value, time + 0.01);
+    this.osc2.frequency.linearRampToValueAtTime(this.osc2.frequency.value, time + 0.01);
+
+    this.env2.gain.cancelScheduledValues(time);
+    this.env2.gain.linearRampToValueAtTime(this.env2.gain.value, time + 0.01);
+    this.env2.gain.linearRampToValueAtTime(0, time + release + 0.05);
+
+  }
+
   getCurrentValues() {
     // multiply by 400 because trimmed in start function
     return [
@@ -136,8 +232,8 @@ export class Engine {
   }
 
   getRelease() {
-    if (this.currentEnveloppe) {
-      return this.currentEnveloppe.release;
+    if (this.release) {
+      return this.release;
     } else {
       return 0
     }
@@ -157,6 +253,10 @@ export class Engine {
     } else {
       return 0;
     }
+  }
+
+  getEndTime() {
+    return this.endTime;
   }
 
   connect(destination, input, output) {

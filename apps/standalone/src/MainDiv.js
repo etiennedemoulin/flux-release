@@ -164,17 +164,17 @@ class MainDiv extends LitElement {
 
       // main loop
       const engine = this.engines[i];
-      // let releaseTime = 0;
-
+      
+      // compute release time
       let releaseTime = getRandomNumber(this.params.centerRelease, this.params.widthRelease);
       if (releaseTime < 0.01) {
         console.log("warning, you asked for a release time < 0.01 second, this is illegal and was clamped");        
         releaseTime = 0.01;
       }
-      // if (engine.env.gain.value !== 0) {
-      //   // compute release time
-      //   engine.triggerRelease(this.audioContext.currentTime, releaseTime);   
-      // }
+
+      if (engine.env.gain.value !== 0) {
+        engine.triggerRelease(this.audioContext.currentTime, releaseTime);   
+      }
 
       // change corpus
       const folder = localEnv[newCorpus][`source ${i+1}`];
@@ -210,7 +210,8 @@ class MainDiv extends LitElement {
       // pour affichage uniquement
       this.engines[i].silence = interDur;
 
-      this.engines[i].start(currentEnveloppe, nextEvent, nextEventDuration); 
+      this.engines[i].forever(currentEnveloppe, nextEvent, nextEventDuration); 
+
     }
 
     return this.params.nextCorpusTime;
@@ -315,7 +316,7 @@ class MainDiv extends LitElement {
             @input=${e => { this.params.widthInterDur = e.detail.value, this.requestUpdate()}}
           ></sc-number>
           <sc-text value="${this.params.corpus}"></sc-text>
-          <sc-text value=${this.currentTime.toFixed(2)}></sc-text>
+          <sc-text value=${this.currentTime.toFixed(1)}></sc-text>
           <sc-text value=${minRA}></sc-text>
           <sc-text value=${maxRA}></sc-text>
           <sc-number

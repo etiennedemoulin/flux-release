@@ -72,6 +72,8 @@ class MainDiv extends LitElement {
       nextCorpusTime:0
     };
 
+    this.volume = 1;
+
     this.engines = null;
 
     this.timeoutFunc = null;
@@ -147,7 +149,11 @@ class MainDiv extends LitElement {
     const localEnv = structuredClone(this.enveloppes);
     this.params.corpus = newCorpus;
 
-    const nextCorpus = getRandomNumber(this.params.centerSyncTime, this.params.widthSyncTime);
+    let nextCorpus = getRandomNumber(this.params.centerSyncTime, this.params.widthSyncTime);
+    if (nextCorpus < 2) {
+      console.log("warning, you asked for a corpus time < 2 seconds, this is illegal and was clamped");
+      nextCorpus = 2;
+    }
     this.params.nextCorpusTime = currentTime + nextCorpus;
 
     for (let i = 0; i < this.engines.length; i++) {
@@ -158,13 +164,17 @@ class MainDiv extends LitElement {
 
       // main loop
       const engine = this.engines[i];
-      let releaseTime = 0;
+      // let releaseTime = 0;
 
-      if (engine.env.gain.value !== 0) {
-        // compute release time
-        releaseTime = getRandomNumber(this.params.centerRelease, this.params.widthRelease);
-        engine.triggerRelease(this.audioContext.currentTime, releaseTime);   
+      let releaseTime = getRandomNumber(this.params.centerRelease, this.params.widthRelease);
+      if (releaseTime < 0.01) {
+        console.log("warning, you asked for a release time < 0.01 second, this is illegal and was clamped");        
+        releaseTime = 0.01;
       }
+      // if (engine.env.gain.value !== 0) {
+      //   // compute release time
+      //   engine.triggerRelease(this.audioContext.currentTime, releaseTime);   
+      // }
 
       // change corpus
       const folder = localEnv[newCorpus][`source ${i+1}`];
@@ -173,8 +183,14 @@ class MainDiv extends LitElement {
       const currentEnveloppe = folder[envName]; 
       currentEnveloppe.name = envName;
 
-      const attackTime = getRandomNumber(this.params.centerAttack, this.params.widthAttack);
+      let attackTime = getRandomNumber(this.params.centerAttack, this.params.widthAttack);
+      if (attackTime < 0.01) {
+        console.log("warning, you asked for a attack time < 0.01 second, this is illegal and was clamped");   
+        attackTime = 0.01;
+      }
+
       currentEnveloppe.attack = attackTime;
+      currentEnveloppe.release = releaseTime;
 
       // parse for old syntax
       if (!currentEnveloppe.enveloppeDuration) {
@@ -190,17 +206,27 @@ class MainDiv extends LitElement {
       const interDur = getRandomNumber(this.params.centerInterDur, this.params.widthInterDur);
       const nextEvent = this.audioContext.currentTime + releaseTime + interDur;
       const nextEventDuration = nextCorpus - releaseTime - interDur - attackTime;
+
+      // pour affichage uniquement
       this.engines[i].silence = interDur;
 
-      this.engines[i].forever(currentEnveloppe, nextEvent, nextEventDuration); 
+      this.engines[i].start(currentEnveloppe, nextEvent, nextEventDuration); 
     }
 
     return this.params.nextCorpusTime;
 
   }
 
-  render() {
+  updateVolume() {
+    const now = this.audioContext.currentTime;
 
+    for (let i = 0; i < this.engines.length; i++) {
+      this.engines[i].master.gain.setValueAtTime(this.engines[i].master.gain.value, now + 0.05);
+      this.engines[i].master.gain.linearRampToValueAtTime(this.volume, now + 0.1);
+    }
+  }
+
+  render() {
     const active = Object.keys(this.enveloppes).length !== 0;
     const minRA = this.params.centerRelease - (this.params.widthRelease / 2) + this.params.centerAttack - (this.params.widthAttack / 2) + this.params.centerInterDur - (this.params.widthInterDur / 2);
     const maxRA = this.params.centerRelease + (this.params.widthRelease / 2) + this.params.centerAttack + (this.params.widthAttack / 2) + this.params.centerInterDur + (this.params.widthInterDur / 2);
@@ -275,6 +301,7 @@ class MainDiv extends LitElement {
           <sc-text value="time until next sync"></sc-text>
           <sc-text value="min RA"></sc-text>
           <sc-text value="max RA"></sc-text>
+          <sc-text value="volume"></sc-text>
         </div>
         <div>
           <sc-number
@@ -291,6 +318,12 @@ class MainDiv extends LitElement {
           <sc-text value=${this.currentTime.toFixed(2)}></sc-text>
           <sc-text value=${minRA}></sc-text>
           <sc-text value=${maxRA}></sc-text>
+          <sc-number
+            value="${this.volume}"
+            min=0
+            max=4
+            @change=${e => { this.volume = e.detail.value; this.updateVolume() }}
+        ></sc-number>
         </div>
       ` : nothing}
       <div class="separator"></div>
@@ -312,7 +345,12 @@ class MainDiv extends LitElement {
 
   async saveConfig() {
 
-    const contents = JSON.stringify(this.params);
+    const params = structuredClone(this.params);
+
+    delete params.corpus;
+    delete params.nextCorpusTime;
+
+    const contents = JSON.stringify(params);
     const fileHandle = await this.dirHandle1.getFileHandle("config.json", { create: true });
 
     // Create a FileSystemWritableFileStream to write to.

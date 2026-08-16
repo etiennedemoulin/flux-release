@@ -117,8 +117,8 @@ export class Engine {
     const sustainTime = statTime2 + ((enveloppe.decay / 2) / enveloppe.enveloppeDuration * duration);
 
     const releaseTime = attackTime + duration;
-    const halfReleaseTime = releaseTime + enveloppe.release * 2/3;
-    const endTime = releaseTime + enveloppe.release;
+    // const halfReleaseTime = releaseTime + enveloppe.release * 2/3;
+    // const endTime = releaseTime + enveloppe.release;
 
     const volume = enveloppe.volume / 400;
     const volume2 = enveloppe.volume2 / 400;
@@ -195,21 +195,22 @@ export class Engine {
     this.release = release;
 
     const sustainVolume = this.env.gain.value;
+    const sustainVolume2 = this.env2.gain.value;
+    const endFreq = this.osc.frequency.value;
 
     this.env.gain.cancelScheduledValues(time);
-    this.env.gain.linearRampToValueAtTime(sustainVolume, time + 0.01);
+    this.env.gain.setValueAtTime(sustainVolume, time);
 
     this.env.gain.linearRampToValueAtTime(sustainVolume * (Math.pow(0.66, 0.25)), time + (release * 0.66));
     this.env.gain.linearRampToValueAtTime(0, time + release);
 
+    this.env2.gain.cancelScheduledValues(time);
+    this.env2.gain.setValueAtTime(sustainVolume2, time);
+    this.env2.gain.linearRampToValueAtTime(0, time + release);
+
     this.osc.frequency.cancelScheduledValues(time);
     this.osc2.frequency.cancelScheduledValues(time);
-    this.osc.frequency.linearRampToValueAtTime(this.osc.frequency.value, time + 0.01);
-    this.osc2.frequency.linearRampToValueAtTime(this.osc2.frequency.value, time + 0.01);
-
-    this.env2.gain.cancelScheduledValues(time);
-    this.env2.gain.linearRampToValueAtTime(this.env2.gain.value, time + 0.01);
-    this.env2.gain.linearRampToValueAtTime(0, time + release + 0.05);
+    this.osc.frequency.setValueAtTime(endFreq, time);
 
   }
 

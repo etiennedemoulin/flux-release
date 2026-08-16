@@ -149,11 +149,7 @@ class MainDiv extends LitElement {
     const localEnv = structuredClone(this.enveloppes);
     this.params.corpus = newCorpus;
 
-    let nextCorpus = getRandomNumber(this.params.centerSyncTime, this.params.widthSyncTime);
-    if (nextCorpus < 2) {
-      console.log("warning, you asked for a corpus time < 2 seconds, this is illegal and was clamped");
-      nextCorpus = 2;
-    }
+    const nextCorpus = getRandomNumber(this.params.centerSyncTime, this.params.widthSyncTime, 2);
     this.params.nextCorpusTime = currentTime + nextCorpus;
 
     for (let i = 0; i < this.engines.length; i++) {
@@ -166,15 +162,8 @@ class MainDiv extends LitElement {
       const engine = this.engines[i];
       
       // compute release time
-      let releaseTime = getRandomNumber(this.params.centerRelease, this.params.widthRelease);
-      if (releaseTime < 0.01) {
-        console.log("warning, you asked for a release time < 0.01 second, this is illegal and was clamped");        
-        releaseTime = 0.01;
-      }
-
-      if (engine.env.gain.value !== 0) {
-        engine.triggerRelease(this.audioContext.currentTime, releaseTime);   
-      }
+      const releaseTime = getRandomNumber(this.params.centerRelease, this.params.widthRelease, 0.01);
+      engine.triggerRelease(this.audioContext.currentTime, releaseTime);   
 
       // change corpus
       const folder = localEnv[newCorpus][`source ${i+1}`];
@@ -183,14 +172,9 @@ class MainDiv extends LitElement {
       const currentEnveloppe = folder[envName]; 
       currentEnveloppe.name = envName;
 
-      let attackTime = getRandomNumber(this.params.centerAttack, this.params.widthAttack);
-      if (attackTime < 0.01) {
-        console.log("warning, you asked for a attack time < 0.01 second, this is illegal and was clamped");   
-        attackTime = 0.01;
-      }
+      const attackTime = getRandomNumber(this.params.centerAttack, this.params.widthAttack, 0.01);
 
       currentEnveloppe.attack = attackTime;
-      currentEnveloppe.release = releaseTime;
 
       // parse for old syntax
       if (!currentEnveloppe.enveloppeDuration) {

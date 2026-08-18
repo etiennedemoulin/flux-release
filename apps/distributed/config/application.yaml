@@ -6,3 +6,5 @@ clients:
   web:
     runtime: browser
     default: true
+  noclient:
+    runtime: browser

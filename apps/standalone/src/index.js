@@ -22,6 +22,6 @@ const transport = new Transport(scheduler);
 
 render(html`
   <h1>flux-release</h1>
-  <main-div .numChannels=${numChannels} .scheduler=${scheduler} .transport=${transport} .audioContext=${audioContext}></main-div>
+  <main-div .numChannels=${numChannels} .transport=${transport} .audioContext=${audioContext}></main-div>
 `, document.body);
 

@@ -1,1 +1,1 @@
-{"id":0,"startFreq":121.2,"endFreq":121.2,"duration":10,"volume":6,"attack":1,"release":1,"decay":0,"sustain":0,"stationary1":60,"stationary2":0,"stationary3":0,"freq2":11.12,"volume2":1}
+{"startFreq":121.2,"endFreq":121.2,"volume":6,"decay":0,"stationary1":60,"stationary2":0,"freq2":11.12,"volume2":1,"decayVolume":0,"enveloppeDuration":60}

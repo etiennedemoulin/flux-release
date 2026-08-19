@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 
-export function readWatchFile(filePath, response) {
+// node
+export function createReadWatchFile(filePath, response) {
   // if file exist
   if (fs.existsSync(filePath)) {
     // read file
@@ -34,6 +35,25 @@ export function readWatchFile(filePath, response) {
           })
         }
       })        
+    });      
+  }
+}
+
+export function createReadFile(filePath, response) {
+  // if file exist
+  if (fs.existsSync(filePath)) {
+    // read file
+    fs.readFile(filePath, (err, data) => {
+      const content = JSON.parse(data);
+      // callback
+      response(content);
+    })
+  } else {
+    // if file do not exists
+    const content = {}
+    fs.writeFile(filePath, JSON.stringify(content), (err) => {
+      // write blank file
+      response(content);       
     });      
   }
 }

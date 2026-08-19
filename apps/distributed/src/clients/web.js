@@ -37,7 +37,7 @@ async function main($container) {
 
   await client.start();
 
-  const mainState = await client.stateManager.attach('main-state'); 
+  const mainState = await client.stateManager.attach('main'); 
   console.log('global shared state', mainState.getValues()); 
 
   mainState.onUpdate(updates => { 

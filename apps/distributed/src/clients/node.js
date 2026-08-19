@@ -8,7 +8,6 @@ import { getTime } from '@ircam/sc-gettime';
 
 import { AppScheduler } from '../components/AppScheduler.js';
 
-import { readWatchFile } from '../components/helpers.js';
 import fs from 'node:fs';
 
 // - General documentation: https://soundworks.dev/
@@ -35,37 +34,68 @@ async function bootstrap() {
   const scheduler = new Scheduler(getTime);
   const transport = new Transport(scheduler);
 
-  const app = new AppScheduler(audioContext, transport);
 
-  const mainState = await client.stateManager.attach('main-state'); 
+  const mainState = await client.stateManager.attach('main'); 
+  const currentState = await client.stateManager.attach('current');
+  const indivCollection = [];
+  const app = new AppScheduler(audioContext, transport, mainState.getValues().params);
+  app.updateEnveloppes(mainState.getValues().enveloppes);
+  mainState.set({ state: 'stop' });
 
-  const enveloppePath = "./appdata/enveloppes.json";
-  const configPath = "./appdata/config.json";
-
-  fs.mkdir('./appdata', (err) => {
-    // console.log(err)
-    readWatchFile(enveloppePath, (content) => {
-      app.updateEnveloppes(content);
+  for (let i = 0; i < app.numChannels; i++) {
+    indivCollection[i] = await client.stateManager.create('indiv', { 
+      id: i, 
     });
+  } 
 
-    readWatchFile(configPath, (content) => {
-      app.updateParams(content);
-    })
+  // updates on app sync on shared state
+  app.onUpdate((updates) => {
+    if ('corpus' in updates) {
+      currentState.set({corpus: updates.corpus});
+    }
+
+    if ('nextSyncTime' in updates) {
+      currentState.set({nextSyncTime: updates.nextSyncTime});
+    }
+
+    if ('enveloppeName' in updates) {
+      indivCollection[updates.id].set({name: updates.enveloppeName})
+    }
+
+    if ('attackTime' in updates) {
+      indivCollection[updates.id].set({attack: updates.attackTime})
+    }
+
+    if ('releaseTime' in updates) {
+      indivCollection[updates.id].set({release: updates.releaseTime})
+    }
+
+    if ('silenceTime' in updates) {
+      indivCollection[updates.id].set({silence: updates.silenceTime})
+    }
+
   })
 
+  // update on shared state sync on app
   mainState.onUpdate(updates => { 
     if ('state' in updates) {
       app.transport[updates.state]();
     };
 
-    if ('enveloppes' in updates) {
-      fs.writeFile(enveloppePath, JSON.stringify(updates.enveloppes), (err) => {});
+    if ('params' in updates) {
+      app.updateParams(updates.params);
     };
 
-    if ('params' in updates) {
-      fs.writeFile(configPath, JSON.stringify(updates.params), (err) => {});
+    if ('enveloppes' in updates) {
+      app.updateEnveloppes(updates.enveloppes);
     }
   }); 
+
+  currentState.onUpdate(updates => {
+    if ('volume' in updates) {
+      app.updateVolume(updates.volume);
+    }
+  })
 
   console.log(`Hello ${client.config.app.name}!`);
 }

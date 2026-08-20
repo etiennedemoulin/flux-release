@@ -51,7 +51,9 @@ const indivSchema = {
   name: { type: 'string', nullable: true, default: null },
   attack: { type: 'float', nullable: false, default: 0},
   release: { type: 'float', nullable: false, default: 0},
-  silence: { type: 'float', nullable: false, default: 0}
+  silence: { type: 'float', nullable: false, default: 0},
+  volume: { type: 'float', nullable: false, default: 0},
+  frequency: { type: 'float', nullable: false, default: 0}
 }
 
 server.stateManager.defineClass('main', mainSchema);

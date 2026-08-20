@@ -25,11 +25,6 @@ export class Engine {
     this.osc.start();
     this.osc2.start();
 
-    this.currentEnveloppe = null;
-    this.silence = 0;
-    this.endTime = 0;
-    this.release = 0;
-
   }
 
   start(enveloppe, time, duration) {
@@ -213,52 +208,14 @@ export class Engine {
 
   }
 
-  getCurrentValues() {
-    // multiply by 400 because trimmed in start function
-    return [
-      this.osc.frequency.value,
-      this.osc2.frequency.value,
-      this.env.gain.value * 400,
-      this.env2.gain.value * 400
-    ];
+  getCurrentVolume() {
+    return this.env.gain.value * 400
   }
 
-  getCurrentEnveloppeName() {
-    if (this.currentEnveloppe) {
-      return this.currentEnveloppe.name;
-    } else {
-      return 0
-    }
+  getCurrentFrequency() {
+    return this.osc.frequency.value
   }
-
-  getRelease() {
-    if (this.release) {
-      return this.release;
-    } else {
-      return 0
-    }
-  }
-
-  getAttack() {
-    if (this.currentEnveloppe) {
-      return this.currentEnveloppe.attack;
-    } else {
-      return 0
-    }
-  }
-
-  getSilence() {
-    if (this.silence) {
-      return this.silence;
-    } else {
-      return 0;
-    }
-  }
-
-  getEndTime() {
-    return this.endTime;
-  }
-
+  
   connect(destination, input, output) {
     this.master.connect(destination, input, output);
     this.env2.connect(destination, input, output);

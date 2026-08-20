@@ -346,6 +346,8 @@ class MainDiv extends LitElement {
   async loadDirectory() {
 
     this.dirHandle1 = await window.showDirectoryPicker();
+
+    this.enveloppes = {};
     for await (const entry1 of this.dirHandle1.values()) {
 
       if (entry1.kind === "directory") {

@@ -74,6 +74,10 @@ async function bootstrap() {
       indivCollection[updates.id].set({silence: updates.silenceTime})
     }
 
+    if ('volume' in updates) {
+      indivCollection[updates.id].set({volume: updates.volume, frequency: updates.frequency})
+    }
+
   })
 
   // update on shared state sync on app

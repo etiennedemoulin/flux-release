@@ -78,15 +78,26 @@ export class AppScheduler {
 					const now = this.transport.currentTime;
 					const nextSyncTime = this.nextCorpusTime - this.transport.getPositionAtTime(now);
 					this.updateFunction.call(this, {nextSyncTime: nextSyncTime});
+					for (let i = 0; i < this.engines.length; i++) {
+						this.updateFunction.call(this, {
+							id: i,
+							volume: this.engines[i].getCurrentVolume(),
+							frequency: this.engines[i].getCurrentFrequency()
+						});
+					}
 				}, this.refreshRate);
 			}
 
 			if (event.type === "stop") {
 				clearInterval(this.timeoutFunc);
 				this.updateFunction.call(this, {nextSyncTime: 0});
-
 				for (let i = 0; i < this.engines.length; i++) {
 			  		this.engines[i].stop(this.audioContext.currentTime);
+			  		this.updateFunction.call(this, {
+						id: i,
+						volume: 0,
+						frequency: this.engines[i].getCurrentFrequency()
+					});
 				}
 			}
 			return event.speed > 0 ? currentTime : Infinity;

@@ -53,8 +53,8 @@ export class IndividualDistDiv extends LitElement {
 			</div>
 			<div>
 				<sc-text value="${this.state.get('name')}"></sc-text>
-				<sc-text></sc-text>
-				<sc-text></sc-text>
+				<sc-text value="${this.state.get('volume').toFixed(2)}"></sc-text>
+				<sc-text value="${this.state.get('frequency').toFixed(2)}"></sc-text>
 				<sc-text value="${this.state.get('attack').toFixed(2)}"></sc-text>
 				<sc-text value="${this.state.get('silence').toFixed(2)}"></sc-text>
 				<sc-text value="${this.state.get('release').toFixed(2)}"></sc-text>

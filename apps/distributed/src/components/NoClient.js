@@ -7,17 +7,14 @@ export class noclient extends LitElement {
 	};
 
 	static styles = css`
-	p {
+	.time {
 	    font-size:30px;
 	}
 
-	sc-text {
-	    width: 140px;
-	    margin: 4px;
-	}
-
 	sc-toggle {
-		background-color: black;
+		background-color: #121212;
+		--sc-toggle-inactive-color: #454545;
+		--sc-toggle-active-color: #FFC067;
 	    width: 700px;
         height: 300px;
 	    margin: 4px;
@@ -40,25 +37,21 @@ export class noclient extends LitElement {
 
 	};
 
+	connectedCallback() {
+		super.connectedCallback();
+	    this.currentSchema.onUpdate(updates => {
+	      this.requestUpdate();
+	    });
+	}
+
 	render() {
-		let bool;
-		if (this.currentSchema.get('volume') !== 0) {
-			bool = true;
-		} else {
-			bool = false;
-		}
 		return html`
-		<p>${this.localTime}</p>
+		<p class="time">${this.localTime}</p>
 		</br>
+		<p>mute</p>
 		<sc-toggle
-			.value=${bool}
-			@change=${e => {
-				if (e.detail.value === false) {
-					this.currentSchema.set({volume:1})
-				} else {
-					this.currentSchema.set({volume:0})
-				}
-			}}
+			.value=${this.currentSchema.get('volume') === 0 ? true : false}
+			@change=${e => e.detail.value ? this.currentSchema.set({volume:0}) : this.currentSchema.set({volume:1})}
 		></sc-toggle>
 
 

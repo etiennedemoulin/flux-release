@@ -13,6 +13,7 @@ export class noclient extends LitElement {
 	}
 
 	sc-toggle {
+		background-color: black;
 	    width: 500px;
 	    height: 500px;
 	    margin: 4px;
@@ -36,10 +37,16 @@ export class noclient extends LitElement {
 	};
 
 	render() {
+		let bool;
+		if (this.currentSchema.get('volume') !== 0) {
+			bool = true;
+		} else {
+			bool = false;
+		}
 		return html`
 		<p>${this.localTime}</p>
 		<sc-toggle
-			.value=${!this.currentSchema.get('volume')}
+			.value=${bool}
 			@change=${e => {
 				if (e.detail.value === false) {
 					this.currentSchema.set({volume:1})

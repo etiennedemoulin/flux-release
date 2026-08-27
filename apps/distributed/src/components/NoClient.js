@@ -1,6 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import '@ircam/sc-components';
-		
+
 export class noclient extends LitElement {
 	static properties = {
 		localTime: { state: true }
@@ -10,13 +10,16 @@ export class noclient extends LitElement {
 	.time {
 	    font-size:30px;
 	}
+	p {
+	font-size:20px;
+	}
 
 	sc-toggle {
 		background-color: #121212;
 		--sc-toggle-inactive-color: #454545;
 		--sc-toggle-active-color: #FFC067;
 	    width: 700px;
-        height: 300px;
+            height: 250px;
 	    margin: 4px;
 	}
 	`;

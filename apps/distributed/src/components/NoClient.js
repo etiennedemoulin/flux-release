@@ -7,6 +7,10 @@ export class noclient extends LitElement {
 	};
 
 	static styles = css`
+	p {
+	    font-size:30px;
+	}
+
 	sc-text {
 	    width: 140px;
 	    margin: 4px;
@@ -14,8 +18,8 @@ export class noclient extends LitElement {
 
 	sc-toggle {
 		background-color: black;
-	    width: 500px;
-	    height: 500px;
+	    width: 700px;
+        height: 300px;
 	    margin: 4px;
 	}
 	`;
@@ -45,6 +49,7 @@ export class noclient extends LitElement {
 		}
 		return html`
 		<p>${this.localTime}</p>
+		</br>
 		<sc-toggle
 			.value=${bool}
 			@change=${e => {

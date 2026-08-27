@@ -41,7 +41,7 @@ export class IndividualDistDiv extends LitElement {
 	render() {
 		return html`
 			<div>
-				<sc-text class="title" value="Electroaimant ${this.id + 1}"></sc-text>
+				<sc-text class="title" value="Electroaimant ${this.state.get('id') + 1}"></sc-text>
 			</div>
 			<div>
 				<sc-text value="Current enveloppe"></sc-text>

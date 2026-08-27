@@ -3,7 +3,12 @@ import { Client } from '@soundworks/core/client.js';
 import { loadConfig, launcher } from '@soundworks/helpers/browser.js';
 import { html, render } from 'lit';
 
-import '../components/NoClient.js';
+import ClientPluginPlatformInit from '@soundworks/plugin-platform-init/client.js'; 
+
+import { Scheduler, Transport } from '@ircam/sc-scheduling';
+import { getTime } from '@ircam/sc-gettime';
+
+import '../components/MainDiv.js';
 
 // - General documentation: https://soundworks.dev/
 // - API documentation:     https://soundworks.dev/api
@@ -14,21 +19,35 @@ async function main($container) {
   const config = loadConfig();
   const client = new Client(config);
 
-  // Eventually register plugins
-  // client.pluginManager.register('my-plugin', plugin);
+  const audioContext = new AudioContext(); 
+  const scheduler = new Scheduler(getTime);
+  const transport = new Transport(scheduler);
+
+  const numChannels = audioContext.destination.maxChannelCount;
+  audioContext.destination.channelCount = numChannels;
+  audioContext.destination.channelCountMode = "explicit";
+  audioContext.destination.channelInterpretation = 'discrete';
+
+  console.log('> Num Channels:', audioContext.destination.channelCount);
+
+  client.pluginManager.register('platform-init', ClientPluginPlatformInit, { audioContext });  
 
   // cf. https://soundworks.dev/tools/helpers.html#browserlauncher
   launcher.register(client, { initScreensContainer: $container });
 
   await client.start();
 
-  const currentSchema = await client.stateManager.attach('current'); 
+  const mainState = await client.stateManager.attach('main'); 
+  console.log('global shared state', mainState.getValues()); 
+
+  mainState.onUpdate(updates => { 
+    console.log(updates); 
+  }); 
 
   function renderApp() {
     render(html`
       <div class="simple-layout">
-        <no-client .currentSchema=${currentSchema}></no-client>
-        <sw-credits .infos="${client.config.app}"></sw-credits>
+      <main-div .numChannels=${numChannels} .transport=${transport} .audioContext=${audioContext}></main-div>
       </div>
     `, $container);
   }

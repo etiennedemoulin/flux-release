@@ -40,7 +40,6 @@ async function bootstrap() {
   const indivCollection = [];
   const app = new AppScheduler(audioContext, transport, mainState.getValues().params);
   app.updateEnveloppes(mainState.getValues().enveloppes);
-  mainState.set({ state: 'stop' });
 
   for (let i = 0; i < app.numChannels; i++) {
     indivCollection[i] = await client.stateManager.create('indiv', { 
@@ -101,7 +100,12 @@ async function bootstrap() {
     }
   })
 
-  console.log(`Hello ${client.config.app.name}!`);
+  setTimeout(() => {
+    console.log('start program');
+    mainState.set({ state: 'start' });
+  }, 5000)
+
+  // console.log(`Hello ${client.config.app.name}!`);
 }
 
 // The launcher allows to launch multiple clients in the same terminal window

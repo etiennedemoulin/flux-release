@@ -3,12 +3,7 @@ import { Client } from '@soundworks/core/client.js';
 import { loadConfig, launcher } from '@soundworks/helpers/browser.js';
 import { html, render } from 'lit';
 
-import ClientPluginPlatformInit from '@soundworks/plugin-platform-init/client.js'; 
-
-import { Scheduler, Transport } from '@ircam/sc-scheduling';
-import { getTime } from '@ircam/sc-gettime';
-
-import '../components/MainDiv.js';
+import '../components/MainDivDistributed.js';
 
 // - General documentation: https://soundworks.dev/
 // - API documentation:     https://soundworks.dev/api
@@ -19,35 +14,28 @@ async function main($container) {
   const config = loadConfig();
   const client = new Client(config);
 
-  const audioContext = new AudioContext(); 
-  const scheduler = new Scheduler(getTime);
-  const transport = new Transport(scheduler);
-
-  const numChannels = audioContext.destination.maxChannelCount;
-  audioContext.destination.channelCount = numChannels;
-  audioContext.destination.channelCountMode = "explicit";
-  audioContext.destination.channelInterpretation = 'discrete';
-
-  console.log('> Num Channels:', audioContext.destination.channelCount);
-
-  client.pluginManager.register('platform-init', ClientPluginPlatformInit, { audioContext });  
-
-  // cf. https://soundworks.dev/tools/helpers.html#browserlauncher
   launcher.register(client, { initScreensContainer: $container });
 
   await client.start();
 
-  const mainState = await client.stateManager.attach('main'); 
-  console.log('global shared state', mainState.getValues()); 
+  const mainSchema = await client.stateManager.attach('main'); 
+  const currentSchema = await client.stateManager.attach('current');
+  const indivCollection = await client.stateManager.getCollection('indiv'); 
+  // console.log('global shared state', mainSchema.getValues()); 
 
-  mainState.onUpdate(updates => { 
-    console.log(updates); 
+  mainSchema.onUpdate(updates => { 
+    // console.log(updates); 
   }); 
 
   function renderApp() {
     render(html`
       <div class="simple-layout">
-      <main-div .numChannels=${numChannels} .transport=${transport} .audioContext=${audioContext}></main-div>
+      <p>full web client</p>
+      <main-distdiv 
+        .mainSchema=${mainSchema} 
+        .currentSchema=${currentSchema}
+        .indivCollection=${indivCollection}
+      ></main-distdiv>
       </div>
     `, $container);
   }

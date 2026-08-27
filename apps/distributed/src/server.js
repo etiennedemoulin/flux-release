@@ -94,6 +94,14 @@ createReadFile(configPath, (content) => {
 
 });
 
+const auditState = await server.getAuditState();
+auditState.onUpdate(() => {
+  if (auditState.getValues().numClients.node === 0) {
+    console.log('stop program on node stop');
+    mainState.set({ state: 'stop' });
+  }
+}, true);
+
 server.stateManager.registerUpdateHook('main', async (updates, currentValues) => {
   if ('enveloppes' in updates) {
     fs.writeFile(enveloppePath, JSON.stringify(updates.enveloppes), (err) => {});

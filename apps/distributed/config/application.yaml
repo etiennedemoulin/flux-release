@@ -3,6 +3,8 @@ author: ""
 clients:
   node:
     runtime: node
+  local:
+    runtime: browser
   web:
     runtime: browser
   noclient:

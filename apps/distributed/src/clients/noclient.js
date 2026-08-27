@@ -28,7 +28,6 @@ async function main($container) {
     render(html`
       <div class="simple-layout">
         <no-client .currentSchema=${currentSchema}></no-client>
-        <sw-credits .infos="${client.config.app}"></sw-credits>
       </div>
     `, $container);
   }

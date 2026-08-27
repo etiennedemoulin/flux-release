@@ -7,14 +7,18 @@ export class noclient extends LitElement {
 	};
 
 	static styles = css`
+	p {
+	    font-size:30px;
+	}
+
 	sc-text {
 	    width: 140px;
 	    margin: 4px;
 	}
 
 	sc-toggle {
-	    width: 500px;
-	    height: 500px;
+	    width: 700px;
+            height: 300px;
 	    margin: 4px;
 	}
 	`;
@@ -38,6 +42,7 @@ export class noclient extends LitElement {
 	render() {
 		return html`
 		<p>${this.localTime}</p>
+		</br>
 		<sc-toggle
 			.value=${!this.currentSchema.get('volume')}
 			@change=${e => {

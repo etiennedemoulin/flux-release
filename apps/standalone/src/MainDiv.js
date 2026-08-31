@@ -66,9 +66,10 @@ class MainDiv extends LitElement {
       centerAttack:0.1,
       widthAttack:0,
       centerSyncTime:1,
-      widthSyncTime:0,
-      updateCorpusGroup: 900
+      widthSyncTime:0
     };
+
+    this.timeUntilNextGroupUpdate = 800;
 
     this.currentCorpus = null;
     this.currentCorpusGroup = null;
@@ -153,7 +154,7 @@ class MainDiv extends LitElement {
 
     // update corpus group
     if (currentTime >= this.nextCorpusGroupUpdate) {
-      this.nextCorpusGroupUpdate = currentTime + this.params.updateCorpusGroup;
+      this.nextCorpusGroupUpdate = currentTime + this.timeUntilNextGroupUpdate;
 
       const groupList = Object.keys(this.enveloppes);
       this.currentCorpusGroup = groupList[Math.floor(Math.random() * groupList.length)];
@@ -163,12 +164,16 @@ class MainDiv extends LitElement {
       this.params = this.enveloppes[this.currentCorpusGroup].params;
 
       this.requestUpdate();
+      console.log("nextUpdate", this.nextCorpusGroupUpdate);
     }
+
     // pick a random new corpus
-    const randomInt = Math.floor(Math.random() * this.enveloppeList.length);
-    const newCorpus = this.enveloppeList[randomInt];
     const localEnv = structuredClone(this.enveloppes[this.currentCorpusGroup]);
+    delete localEnv.params;
+    const localKeys = Object.keys(localEnv);
+    const newCorpus = Object.keys(localEnv)[Math.floor(Math.random() * localKeys.length)];
     this.currentCorpus = newCorpus;
+    console.log(localKeys);
 
     for (let i = 0; i < this.engines.length; i++) {
 
@@ -300,8 +305,8 @@ class MainDiv extends LitElement {
           ></sc-number>
           <sc-number
             min=0
-            value=${this.params.updateCorpusGroup}
-            @input=${e => { this.params.updateCorpusGroup = e.detail.value }}
+            value=${this.timeUntilNextGroupUpdate}
+            @input=${e => { this.timeUntilNextGroupUpdate = e.detail.value }}
           ></sc-number>
         </div>
         <div>
@@ -413,7 +418,6 @@ class MainDiv extends LitElement {
     if (Object.keys(this.enveloppes).length > 0) {
       const groupList = Object.keys(this.enveloppes);
       this.enveloppeList = Object.keys(this.enveloppes[groupList[0]]);
-      this.enveloppeList = this.enveloppeList.filter(element => element !== "params");
       this.currentCorpus = this.enveloppeList[0];
       this.currentCorpusGroup = Object.keys(this.enveloppes)[0];
       this.params = this.enveloppes[groupList[0]].params;

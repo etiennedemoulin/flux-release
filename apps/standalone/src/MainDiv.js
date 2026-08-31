@@ -66,10 +66,12 @@ class MainDiv extends LitElement {
       centerAttack:0.1,
       widthAttack:0,
       centerSyncTime:1,
-      widthSyncTime:0
+      widthSyncTime:0,
+      updateCorpusGroup: 900
     };
 
     this.currentCorpus = null;
+    this.currentCorpusGroup = null;
 
     this.volume = 1;
 
@@ -78,6 +80,7 @@ class MainDiv extends LitElement {
     this.timeoutFunc = null;
     this.currentTime = 0;
     this.nextCorpusTime = 0;
+    this.nextCorpusGroupUpdate = 0;
 
     // needed for process function
     this.process = this.process.bind(this);
@@ -135,6 +138,8 @@ class MainDiv extends LitElement {
         // stop all engines
         clearInterval(this.timeoutFunc);
 
+        this.nextCorpusGroupUpdate = 0;
+
         for (let i = 0; i < this.engines.length; i++) {
           this.engines[i].stop();
         }
@@ -146,10 +151,23 @@ class MainDiv extends LitElement {
     const nextCorpus = getRandomNumber(this.params.centerSyncTime, this.params.widthSyncTime, 2);
     this.nextCorpusTime = currentTime + nextCorpus;
 
+    // update corpus group
+    if (currentTime >= this.nextCorpusGroupUpdate) {
+      this.nextCorpusGroupUpdate = currentTime + this.params.updateCorpusGroup;
+
+      const groupList = Object.keys(this.enveloppes);
+      this.currentCorpusGroup = groupList[Math.floor(Math.random() * groupList.length)];
+
+      this.enveloppeList = Object.keys(this.enveloppes[this.currentCorpusGroup]);
+
+      this.params = this.enveloppes[this.currentCorpusGroup].params;
+
+      this.requestUpdate();
+    }
     // pick a random new corpus
     const randomInt = Math.floor(Math.random() * this.enveloppeList.length);
     const newCorpus = this.enveloppeList[randomInt];
-    const localEnv = structuredClone(this.enveloppes);
+    const localEnv = structuredClone(this.enveloppes[this.currentCorpusGroup]);
     this.currentCorpus = newCorpus;
 
     for (let i = 0; i < this.engines.length; i++) {
@@ -236,6 +254,7 @@ class MainDiv extends LitElement {
             this.transport[e.detail.value]();
           }}
         ></sc-transport>
+        <sc-text value="${this.currentCorpusGroup}"></sc-text>
       ` : nothing}
       </div>
       ${active ? html`
@@ -246,6 +265,7 @@ class MainDiv extends LitElement {
           <sc-text value="amplitude release"></sc-text>
           <sc-text value="moyenne attack"></sc-text>
           <sc-text value="amplitude attack"></sc-text>
+          <sc-text value="change group each"></sc-text>
         </div>
         <div>
           <sc-number
@@ -277,6 +297,11 @@ class MainDiv extends LitElement {
             min=0
             value=${this.params.widthAttack}
             @input=${e => { this.params.widthAttack = e.detail.value, this.requestUpdate()}}
+          ></sc-number>
+          <sc-number
+            min=0
+            value=${this.params.updateCorpusGroup}
+            @input=${e => { this.params.updateCorpusGroup = e.detail.value }}
           ></sc-number>
         </div>
         <div>
@@ -346,49 +371,52 @@ class MainDiv extends LitElement {
   async loadDirectory() {
 
     this.dirHandle1 = await window.showDirectoryPicker();
-
     this.enveloppes = {};
     for await (const entry1 of this.dirHandle1.values()) {
-
-      if (entry1.kind === "directory") {
-
+      if (entry1.kind === 'directory') {
+        // corpus group
         this.enveloppes[entry1.name] = {};
-
         const dirHandle2 = await this.dirHandle1.getDirectoryHandle(entry1.name);
-
         for await (const entry2 of dirHandle2.values()) {
-
           if (entry2.kind === "directory") {
-
+            // corpus
             this.enveloppes[entry1.name][entry2.name] = {};
-
             const dirHandle3 = await dirHandle2.getDirectoryHandle(entry2.name);
-
             for await (const entry3 of dirHandle3.values()) {
-
-              if (entry3.kind === 'file' && entry3.name !== '.DS_Store') {
-
-                const fileHandle = await dirHandle3.getFileHandle(entry3.name);
-                const file = await fileHandle.getFile();
-                const contents = await file.text();
-                this.enveloppes[entry1.name][entry2.name][entry3.name] = JSON.parse(contents);
+              if (entry3.kind === "directory") {
+                // channel number
+                this.enveloppes[entry1.name][entry2.name][entry3.name] = {};
+                const dirHandle4 = await dirHandle3.getDirectoryHandle(entry3.name);
+                for await (const entry4 of dirHandle4.values()) {
+                  if (entry4.kind === 'file' && entry4.name !== '.DS_Store') {
+                    // enveloppe
+                    const fileHandle = await dirHandle4.getFileHandle(entry4.name);
+                    const file = await fileHandle.getFile();
+                    const contents = await file.text();
+                    this.enveloppes[entry1.name][entry2.name][entry3.name][entry4.name] = JSON.parse(contents);
+                  }
+                } 
               }
-            } 
+            }
+          } else {
+            if (entry2.name === 'config.json') {
+              const fileHandle = await dirHandle2.getFileHandle(entry2.name);
+              const file = await fileHandle.getFile();
+              const contents = await file.text();
+              this.enveloppes[entry1.name]["params"] = JSON.parse(contents);
+            }
           }
-        }
-      } else {
-        if (entry1.name === 'config.json') {
-          const fileHandle = await this.dirHandle1.getFileHandle(entry1.name);
-          const file = await fileHandle.getFile();
-          const contents = await file.text();
-          this.params = JSON.parse(contents);
         }
       }
     };
 
     if (Object.keys(this.enveloppes).length > 0) {
-      this.enveloppeList = Object.keys(this.enveloppes);
-      this.currentCorpus = Object.keys(this.enveloppes)[0];
+      const groupList = Object.keys(this.enveloppes);
+      this.enveloppeList = Object.keys(this.enveloppes[groupList[0]]);
+      this.enveloppeList = this.enveloppeList.filter(element => element !== "params");
+      this.currentCorpus = this.enveloppeList[0];
+      this.currentCorpusGroup = Object.keys(this.enveloppes)[0];
+      this.params = this.enveloppes[groupList[0]].params;
     }
 
     this.requestUpdate();

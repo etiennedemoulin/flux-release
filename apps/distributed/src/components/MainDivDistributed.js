@@ -69,17 +69,7 @@ export class MainDivDistributed extends LitElement {
 
 		return html`
 		<div>
-		<sc-button
-          value="Read"
-          @input=${async () => {
-            const dirHandle = await window.showDirectoryPicker();
-            loadGroupDirectory(dirHandle, (enveloppes, params) => {
-              this.mainSchema.set({enveloppes: enveloppes});
-              updateSchema(this.mainSchema, 'params', params);
-              // this.requestUpdate();
-            });
-          }}
-        ></sc-button>
+        <p>use npm run watch update-config to update enveloppes</p>
         <sc-transport
           .buttons=${['start', 'stop']}
           value=${this.mainSchema.get('state')}

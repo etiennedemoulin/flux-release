@@ -10,3 +10,5 @@ clients:
   noclient:
     runtime: browser
     default: true
+  update-config:
+    runtime: node

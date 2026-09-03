@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"> 
+    <plist version="1.0"> 
+        <dict> 
+            <key>Label</key>
+            <string>com.collectifvelcro.fluxrelease</string>
+            <key>ProgramArguments</key>
+            <array>
+                <string>/Users/production/.nvm/versions/node/v24.20.0/bin/node</string>
+                <string>/Users/production/flux-release/apps/distributed/.build/clients/node.js</string>
+            </array>
+            <key>WorkingDirectory</key>
+            <string>/Users/production/flux-release/apps/distributed</string>
+            <key>RunAtLoad</key>
+            <true/>
+            <key>KeepAlive</key>
+            <true/>
+            <key>StandardOutPath</key>
+            <string>/tmp/startup-scripts.stdout</string>
+            <key>StandardErrorPath</key>
+            <string>/tmp/startup-scripts.stderr</string>
+        </dict> 
+    </plist>

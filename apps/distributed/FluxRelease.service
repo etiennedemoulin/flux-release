@@ -1,0 +1,14 @@
+[Unit]
+Description=Flux Release App
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/flux-release/apps/distributed
+ExecStart=/home/pi/.nvm/versions/node/v24.20.0/bin/node /home/pi/flux-release/apps/distributed/.build/server.js
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target

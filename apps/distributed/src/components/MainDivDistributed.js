@@ -53,7 +53,7 @@ export class MainDivDistributed extends LitElement {
   		}, true); 
 
     this.currentSchema.onUpdate(updates => {
-      console.log(updates);
+      // console.log(updates);
       this.requestUpdate();
     });
 

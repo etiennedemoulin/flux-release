@@ -1,6 +1,6 @@
 type: development
 port: 8000
-serverAddress: ''
+serverAddress: 'aws.local'
 useHttps: false
 httpsInfos:
   cert: null

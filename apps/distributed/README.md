@@ -1,121 +1,75 @@
-# `distributed`
+# distributed system
 
-Thanks for using soundworks!
+1. Raspberry Pi 4B + Waveshare screen for GUI and serveur
+2. MacMini M1 + Scarlett 4i4 for sound
 
-## Links / Resources
+## Raspberry configuration
 
-- [General Documentation / Tutorials](https://soundworks.dev/)
-- [API](https://soundworks.dev/api)
-- [Examples](https://github.com/collective-soundworks/soundworks-examples)
-- [Issue Tracker](https://github.com/collective-soundworks/soundworks/issues)
-- [Working with Max/MSP](https://github.com/collective-soundworks/soundworks-max)
+1. Screen
+https://www.waveshare.com/wiki/4inch_HDMI_LCD
 
-## Soundworks wizard
+	a. overlay
+download https://files.waveshare.com/wiki/10.1inch%20HDMI%20LCD/waveshare-ads7846.dtbo
+add to /boot/overlays 
 
-The soundworks wizard is a interactive command line tool that gives you access to a bunch of high-level routines, such as:
+	b. update config
+on boot/firmware/config.txt
 
-- Create and configure new clients
-- Install / uninstall plugins and related libraries
-- Find some documentation
-- Create environment config files
-- etc.
+dtparam=audio=off
+dtoverlay=vc4-kms-v3d,noaudio
 
-```bash
-npx soundworks
-```
+hdmi_group=2
+hdmi_mode=87
+hdmi_timings=480 0 40 10 80 800 0 13 3 32 0 0 0 60 0 32000000 3
+hdmi_drive=1
+hdmi_force_hotplug=1
+dtoverlay=waveshare-ads7846,penirq=25,xmin=312,xmax=3609,ymin=214,ymax=3510,speed=50000
 
-## Available npm scripts
+use evtest to set x,y
 
-### `npm run dev`
+2. wifi 
+sudo nmtui
 
-Launch the application in development mode. Watch file system, compile and/or bundle files on change, and restart the server when needed.
+3. install node
+https://nodejs.org/en/download 
+app https://github.com/etiennedemoulin/flux-release
+npm install
+npm run build
 
-### `npm run build`
+4. soundworks serveur
 
-Build the application. Compile and bundle the sources without launching the server.
+in /etc/systemd/user
 
-### `npm run start`
+[Unit]
+Description=Flux Release App
+After=network.target
 
-Launch the server without building the application. Basically a shortcut for `node ./.build/server/index.js`.
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/flux-release/apps/distributed
+ExecStart=/home/pi/.nvm/versions/node/v24.20.0/bin/node /home/pi/flux-release/apps/distributed/.build/server.js
+Restart=on-failure
+RestartSec=10s
 
-### `npm run watch [name]` _(node clients only)_
+[Install]
+WantedBy=multi-user.target
 
-Launch the `[name]` client and restart when the sources are updated. 
+sudo chmod +x FluxRelease.service
+sudo systemctl daemon-reload
+sudo systemctl enable FluxRelease.service
+sudo systemctl start FluxRelease.service
 
-For example, if you are developing an application with a node client, you should run the `dev` script (to build the sources and start the server) in one terminal:
+4. chromium on boot
 
-```bash
-npm run dev
-```
+in ~/.config/autostart
 
-And launch and watch the node client(s) (e.g. called `thing`) in another terminal. The client will automatically restart when the sources are re-compiled by the `dev` script:
+[Desktop Entry]
+Name=Chromium
+Comment=Starts after desktop login
+Type=Application
+Exec=chromium --kiosk --password-store=basic --start-fullscreen http://localhost:8000
+Terminal=false
 
-```bash
-npm run watch thing
-```
 
-## Configuring the build
 
-Browser clients are compiled using [swc](https://swc.rs/). By default, builds are made with the `es2022` target which supports a number of modern JavaScript features.
-
-If you need to support older browsers, you can configure the build in the `.swcrc` file (cf. [https://swc.rs/docs/configuration/swcrc](https://swc.rs/docs/configuration/swcrc))
-
-## Environment variables
-
-### `ENV`
-
-Define which environment config file should be used to run the application. Environment config files are located in the `/config` directory, are prefixed with `env-`. 
-
-For example, given the following config files:
-
-```
-├─ config
-│  ├─ env-default.json
-│  └─ env-prod.json   
-```
-
-To start the server the `/config/env-prod.js` configuration file, you should run:
-
-```bash
-ENV=prod npm run start
-``` 
-
-If no `env` file is found, the application will generate a default config suitable for most development uses.
-
-### `PORT`
-
-Override the port defined in the config file. 
-
-For example, to launch the server on port `3000` whatever the `port` value defined in the default configuration file, you should run:
-
-```bash
-PORT=3000 npm run start
-```
-
-## Emulating clients
-
-In development it can be convenient to emulate several clients in the same browser window or same terminal
-
-### Browsers clients
-
-To emulate several browser clients in the same window, just append the query parameter `?emulate=[num_clients]` to the URL. For example to launch 10 clients side by side in the same window, you should run:
-
-```
-http://127.0.0.1:8000?emulate=10
-```
-
-### Node clients
-
-To emulate several node clients in the same terminal, you can use the `EMULATE=[num_clients]` environment variable. For example to launch 10 clients in parallel from the same terminal, you should run:
-
-```bash
-EMULATE=10 npm run watch thing
-```
-
-## Credits
-
-[soundworks](https://soundworks.dev) is developed by the ISMM team at Ircam
-
-## License
-
-[BSD-3-Clause](./LICENSE)

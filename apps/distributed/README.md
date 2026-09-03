@@ -38,22 +38,7 @@ npm run build
 
 4. soundworks serveur
 
-in /etc/systemd/user
-
-[Unit]
-Description=Flux Release App
-After=network.target
-
-[Service]
-Type=simple
-User=pi
-WorkingDirectory=/home/pi/flux-release/apps/distributed
-ExecStart=/home/pi/.nvm/versions/node/v24.20.0/bin/node /home/pi/flux-release/apps/distributed/.build/server.js
-Restart=on-failure
-RestartSec=10s
-
-[Install]
-WantedBy=multi-user.target
+copy FluxRelease.service in /etc/systemd/system
 
 sudo chmod +x FluxRelease.service
 sudo systemctl daemon-reload
@@ -62,14 +47,20 @@ sudo systemctl start FluxRelease.service
 
 4. chromium on boot
 
-in ~/.config/autostart
+copy Chromium.desktop in ~/.config/autostart
 
-[Desktop Entry]
-Name=Chromium
-Comment=Starts after desktop login
-Type=Application
-Exec=chromium --kiosk --password-store=basic --start-fullscreen http://localhost:8000
-Terminal=false
+5. remove cursor
 
+I simply added a nocursor option as follows in the file (/etc/lightdm/lightdm.conf)
+
+xserver-command = X -nocursor
 
 
+## MacOS Config
+
+1. bootscript is located at com.collectifvelcro.fluxreleaseclient.plist
+copy to ~/Library/LaunchAgents
+load with launchctl load -w ~/Library/LaunchAgents/com.collectifvelcro.fluxreleaseclient.plist
+
+2. autostart/stop
+sudo pmset repeat poweron MTWRFSU 9:00:00 shutdown MTWRFSU 18:00:00

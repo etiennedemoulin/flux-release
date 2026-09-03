@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Chromium
+Comment=Starts after desktop login
+Type=Application
+Exec=chromium --kiosk --password-store=basic --start-fullscreen http://localhost:8000
+Terminal=false
